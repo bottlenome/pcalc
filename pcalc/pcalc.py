@@ -200,6 +200,49 @@ class Value():
     def __ixor__(self, other):
         return self.__xor__(other)
 
+class Array():
+    def __init__(self, shape, data=None):
+        self.shape = shape
+        self.dim = len(shape)
+        if self.dim != 2:
+            raise NotImplementedError
+        size = 1
+        for x in shape:
+            size *= x
+        self.size = size
+        if data is None:
+            self.datas = [Value() for _ in range(size)]
+        else:
+            assert(len(data) == size)
+            self.datas = [Value(v) for v in data]
+
+    # c, z, y, x
+    def __getitem__(self, key):
+        if type(key) == tuple:
+            assert(len(key) == self.dim)
+            y = key[0]
+            x = key[1]
+            return self.datas[y * self.shape[0] + x]
+        else:
+            print("y")
+            raise NotImplementedError
+        print(key)
+
+def array(data, dtype="int16"):
+    l = []
+    shape = (len(data), len(data[0]))
+    for i in range(len(data)):
+        assert(len(data[i]) == shape[1])
+        for j in range(len(data[i])):
+            l.append(data[i][j])
+    return Array(shape, data=l)
+
+def zeros(shape, dtype="int16"):
+    size = 1
+    for x in shape:
+        size *= x
+    return Array(shape, data=[0 for v in range(size)])
+
 if __name__ == "__main__":
     # initalize
     x = Value()
@@ -280,3 +323,18 @@ if __name__ == "__main__":
     b = Value(123)
     c = a * b
     assert(c.observe() == (10000 * 123) % 65536)
+
+    a = Array((2, 3))
+    assert(a.shape == (2, 3))
+    assert(a.size == 6)
+    v = a[0, 0]
+    a = zeros((2, 3))
+    assert(a.shape == (2, 3))
+    assert(a.size == 6)
+    v = a[0, 0]
+    assert(v.observe() == 0)
+    a = array([[1, 2, 3], [4, 5, 6]])
+    assert(a.shape == (2, 3))
+    assert(a.size == 6)
+    v = a[1, 2]
+    assert(v.observe() == 5)
