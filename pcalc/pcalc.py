@@ -45,16 +45,29 @@ class Value():
             raise NotImplementedError
         return value
 
-    def op(self, op, A, B):
+    def op(self, f, A, B):
+        if (isinstance(A, Value) and isinstance(B, Array)):
+            return self.opvM(f, A, B)
+        else:
+            return self.op_(f, A, B)
+
+    def op_(self, f, A, B):
         C = Value(0)
         mp = {}
         for b in B.value_map:
             for a in A.value_map:
-                value = self.cut(op(a, b))
+                value = self.cut(f(a, b))
                 if not mp.has_key(value):
                     mp[value] = 0.0
                 mp[value] += A.value_map[a] * B.value_map[b]
         C.value_map = mp
+        return C
+
+    def opvM(self, f, A, B):
+        C = zeros(B.shape)
+        for y in range(C.shape[0]):
+            for x in range(C.shape[1]):
+                C[y, x] = f(A, B[y, x])
         return C
 
     def __add__(self, other):
@@ -141,7 +154,7 @@ class Value():
         raise NotImplementedError()
 
     def __pow__(self, other):
-        raise NotImplementedError()
+        return self.__mul__(self)
 
     def __rshift__(self, other):
         raise NotImplementedError()
@@ -222,26 +235,100 @@ class Array():
             assert(len(key) == self.dim)
             y = key[0]
             x = key[1]
-            return self.datas[y * self.shape[0] + x]
+            return self.datas[y * self.shape[1] + x]
+        elif type(key) == int:
+            return self.datas[key]
         else:
-            print("y")
+            print("invalid type:", type(key), "value:", key)
             raise NotImplementedError
         print(key)
 
-def array(data, dtype="int16"):
+    def __setitem__(self, index, value):
+        if type(index) == tuple:
+            assert(len(index) == self.dim)
+            y = index[0]
+            x = index[1]
+            index = y * self.shape[1] + x
+            self.datas[index] = value
+        elif type(index) == int:
+            self.datas[index] = value
+        else:
+            print("invalid type:", type(index), "value:", value)
+            raise NotImplementedError
+
+    def __pow__(self, m):
+        ret = zeros(self.shape)
+        for y in range(self.shape[0]):
+            for x in range(self.shape[1]):
+                index = y * self.shape[1] + x
+                ret.datas[index] = self.datas[index] ** m
+        return ret
+
+    def observe(self):
+        ret = []
+        for y in range(self.shape[0]):
+            row = []
+            for x in range(self.shape[1]):
+                index = y * self.shape[1] + x
+                row.append(self.datas[index].observe())
+            ret.append(row)
+        return ret
+
+    def op(self, f, A, B):
+        C = zeros(B.shape)
+        if f == "add":
+            f = lambda x, y: A[y, x] + B[y, x]
+        elif f == "sub":
+            f = lambda x, y: A[y, x] - B[y, x]
+        else:
+            raise NotImplementedError
+
+        for y in range(C.shape[0]):
+            for x in range(C.shape[1]):
+                C[y, x] = f(x, y)
+        return C
+
+    def __add__(self, other):
+        return self.op("add", self, other)
+
+    def __sub__(self, other):
+        return self.op("sub", self, other)
+
+    def sum(self):
+        x = self[0]
+        for i in range(1, self.size):
+            x += self[i]
+        return x
+    
+
+def array(data, dtype="uint16"):
     l = []
     shape = (len(data), len(data[0]))
-    for i in range(len(data)):
-        assert(len(data[i]) == shape[1])
-        for j in range(len(data[i])):
-            l.append(data[i][j])
+    for y in range(len(data)):
+        assert(len(data[y]) == shape[1])
+        for x in range(len(data[y])):
+            l.append(data[y][x])
     return Array(shape, data=l)
 
-def zeros(shape, dtype="int16"):
+def zeros(shape, dtype="uint16"):
     size = 1
     for x in shape:
         size *= x
     return Array(shape, data=[0 for v in range(size)])
+
+def randarray(shape, dtype="uint16"):
+    if type(shape) == int:
+        size = shape
+        shape = (shape, 1)
+    else:
+        size = 1
+        for x in shape:
+            size *= x
+    if dtype == "uint16":
+        int_min = 0
+        int_max = 2 ** 16
+
+    return Array(shape, data=[random.randint(int_min, int_max) for _ in range(size)])
 
 if __name__ == "__main__":
     # initalize
@@ -336,5 +423,14 @@ if __name__ == "__main__":
     a = array([[1, 2, 3], [4, 5, 6]])
     assert(a.shape == (2, 3))
     assert(a.size == 6)
-    v = a[1, 2]
+    v = a[1, 1]
     assert(v.observe() == 5)
+    assert(a[0, 0].observe() == 1)
+    assert(a[0, 1].observe() == 2)
+    assert(a[0, 2].observe() == 3)
+    assert(a[1, 0].observe() == 4)
+    assert(a[1, 1].observe() == 5)
+    assert(a[1, 2].observe() == 6)
+
+    for i in a:
+        pass
