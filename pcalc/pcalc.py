@@ -11,7 +11,7 @@ class Value():
         return mp
 
     def __init__(self, value=None, bit=16, unsigned=True):
-        self.bit = 16
+        self.bit = bit
         self.unsigned = unsigned
         self.range = 2 ** self.bit
         if self.unsigned:
@@ -19,7 +19,7 @@ class Value():
             self.max = 2 ** self.bit - 1
         else:
             self.min = 1 - 2 ** (self.bit - 1)
-            self.max = 2 ** (self.bit) - 1
+            self.max = 2 ** (self.bit - 1) - 1
         if value is None:
             self.value_map = self.create_uniform_possibility()
         else:
@@ -56,7 +56,12 @@ class Value():
         if self.unsigned:
             value %= self.range
         else:
-            raise NotImplementedError
+            if value < self.min:
+                while value < self.min:
+                    value += (self.range - 1)
+            elif self.max < value:
+                while self.max < value:
+                    value -= (self.range - 1)
         return value
 
     def op(self, f, A, B):
@@ -228,9 +233,19 @@ class Value():
         return self.__xor__(other)
 
 class Array():
-    def __init__(self, shape, data=None):
+    def getBitUnsigned(self, dtype):
+        if dtype == "uint16":
+            return 16, True
+        elif dtype == "int32":
+            return 32, False
+        else:
+            raise NotImplementedError()
+
+    def __init__(self, shape, data=None, dtype="uint16"):
         self.shape = shape
         self.dim = len(shape)
+        self.dtype = dtype
+        bit, unsigned = self.getBitUnsigned(dtype)
         if self.dim != 2:
             raise NotImplementedError
         size = 1
@@ -238,10 +253,10 @@ class Array():
             size *= x
         self.size = size
         if data is None:
-            self.datas = [Value() for _ in range(size)]
+            self.datas = [Value(bit=bit, unsigned=unsigned) for _ in range(size)]
         else:
             assert(len(data) == size)
-            self.datas = [Value(v) for v in data]
+            self.datas = [Value(v, bit=bit, unsigned=unsigned) for v in data]
 
     # c, z, y, x
     def __getitem__(self, key):
@@ -249,6 +264,10 @@ class Array():
             assert(len(key) == self.dim)
             y = key[0]
             x = key[1]
+            if y >= self.shape[0]:
+                raise IndexError("index y:" + str(y) + " is out of range")
+            if x >= self.shape[1]:
+                raise IndexError("index x:" + str(x) + " is out of range")
             return self.datas[y * self.shape[1] + x]
         elif type(key) == int:
             return self.datas[key]
@@ -322,13 +341,13 @@ def array(data, dtype="uint16"):
         assert(len(data[y]) == shape[1])
         for x in range(len(data[y])):
             l.append(data[y][x])
-    return Array(shape, data=l)
+    return Array(shape, data=l, dtype=dtype)
 
 def zeros(shape, dtype="uint16"):
     size = 1
     for x in shape:
         size *= x
-    return Array(shape, data=[0 for v in range(size)])
+    return Array(shape, data=[0 for v in range(size)], dtype=dtype)
 
 def randarray(shape, dtype="uint16"):
     if type(shape) == int:
@@ -342,109 +361,8 @@ def randarray(shape, dtype="uint16"):
         int_min = 0
         int_max = 2 ** 16
 
-    return Array(shape, data=[random.randint(int_min, int_max) for _ in range(size)])
+    return Array(shape, data=[random.randint(int_min, int_max) for _ in range(size)], dtype=dtype)
 
 if __name__ == "__main__":
-    # initalize
-    x = Value()
-    assert(sum(x.value_map.values()) - 1.0 < 0.0000000001)
-    try:
-        x = Value(65536)
-        assert(False)
-    except:
-        pass
-
-    # unsingned
-    # normal
-    a = Value(257)
-    b = Value(123)
-    c = a + b
-    assert(c.observe() == 257 + 123)
-    c = a - b
-    assert(c.observe() == 257 - 123)
-    c = a * b
-    assert(c.observe() == (257 * 123))
-    c = a / b
-    assert(c.observe() == (257 / 123))
-    c = (a & b)
-    assert(c.observe() == (257 & 123))
-    c = a | b
-    assert(c.observe() == (257 | 123))
-    c = a ^ b
-    assert(c.observe() == (257 ^ 123))
-
-    TRUE = 1
-    FALSE = 0
-    c = (a < b)
-    assert(c.observe() == FALSE)
-    c = (a <= b)
-    assert(c.observe() == FALSE)
-    c = (a == b)
-    assert(c.observe() == FALSE)
-    c = (a != b)
-    assert(c.observe() == TRUE)
-    c = (a > b)
-    assert(c.observe() == TRUE)
-    c = (a >= b)
-    assert(c.observe() == TRUE)
-
-    a += b
-    assert(a.observe() == (257 + 123))
-    a = Value(257)
-    a -= b
-    assert(a.observe() == 257 - 123)
-    a = Value(257)
-    a *= b
-    assert(a.observe() == 257 * 123)
-    a = Value(257)
-    a /= b
-    assert(a.observe() == 257 / 123)
-    a = Value(257)
-    a &= b
-    assert(a.observe() == 257 & 123)
-    a = Value(257)
-    a |= b
-    assert(a.observe() == 257 | 123)
-    a = Value(257)
-    a ^= b
-    assert(a.observe() == 257 ^ 123)
-
-    # border
-    a = Value(65535)
-    b = Value(1)
-    c = a + b
-    assert(c.observe() == 0)
-
-    a = Value(0)
-    b = Value(1)
-    c = a - b
-    assert(c.observe() == 65535)
-
-    a = Value(10000)
-    b = Value(123)
-    c = a * b
-    assert(c.observe() == (10000 * 123) % 65536)
-
-    a = Array((2, 3))
-    assert(a.shape == (2, 3))
-    assert(a.size == 6)
-    v = a[0, 0]
-    a = zeros((2, 3))
-    assert(a.shape == (2, 3))
-    assert(a.size == 6)
-    v = a[0, 0]
-    assert(v.observe() == 0)
-    a = array([[1, 2, 3], [4, 5, 6]])
-    assert(a.shape == (2, 3))
-    assert(a.size == 6)
-    v = a[1, 1]
-    assert(v.observe() == 5)
-    assert(a[0, 0].observe() == 1)
-    assert(a[0, 1].observe() == 2)
-    assert(a[0, 2].observe() == 3)
-    assert(a[1, 0].observe() == 4)
-    assert(a[1, 1].observe() == 5)
-    assert(a[1, 2].observe() == 6)
-
     x = Value()
     print(x.entropy())
