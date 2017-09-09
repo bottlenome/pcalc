@@ -1,4 +1,5 @@
 import pcalc
+import numpy as np
 
 def sphere(x):
     return (x ** 2).sum()
@@ -33,3 +34,7 @@ if __name__ == "__main__":
     ret = r.fitness(a)
     print(ret.observe())
     print(ret.expect())
+    
+    x = np.array(a.observe())
+    y = np.array(r.y.observe()).reshape(x.shape)
+    print(((1 - x) ** 2 + 100 * (y - x ** 2) ** 2).sum() % (2 ** 16))
