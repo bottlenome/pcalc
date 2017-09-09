@@ -1,4 +1,5 @@
 import random
+import math
 from operator import *
 
 class Value():
@@ -42,6 +43,13 @@ class Value():
         ret = 0.0
         for key in self.value_map:
             ret += key * self.value_map[key]
+        return ret
+
+    def entropy(self):
+        ret = 0.0
+        for key in self.value_map:
+            p = self.value_map[key]
+            ret += -p * math.log(p)
         return ret
 
     def cut(self, value):
@@ -438,5 +446,5 @@ if __name__ == "__main__":
     assert(a[1, 1].observe() == 5)
     assert(a[1, 2].observe() == 6)
 
-    for i in a:
-        pass
+    x = Value()
+    print(x.entropy())
