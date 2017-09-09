@@ -30,4 +30,6 @@ if __name__ == "__main__":
     assert(result[1][2] == 65536 - 4)
    
     r = Rosenbrock(6)
-    print(r.fitness(a).observe())
+    ret = r.fitness(a)
+    print(ret.observe())
+    print(ret.expect())

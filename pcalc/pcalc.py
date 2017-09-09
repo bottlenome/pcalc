@@ -38,6 +38,12 @@ class Value():
                 break
         return key
 
+    def expect(self):
+        ret = 0.0
+        for key in self.value_map:
+            ret += key * self.value_map[key]
+        return ret
+
     def cut(self, value):
         if self.unsigned:
             value %= self.range
