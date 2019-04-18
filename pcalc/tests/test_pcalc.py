@@ -184,6 +184,9 @@ def test_array():
     assert(a[1, 0].observe() == 4)
     assert(a[1, 1].observe() == 5)
     assert(a[1, 2].observe() == 6)
+
+    a = Array((2, 3), data=[1, 2, 3, 4, 5, 6], dtype="int32")
+    assert(a.dtype == "int32")
     
     try:
         a[0, 3]
