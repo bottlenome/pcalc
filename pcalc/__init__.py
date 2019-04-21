@@ -1,2 +1,2 @@
 from pcalc import *
-from functions import *
+from . import functions

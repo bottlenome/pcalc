@@ -208,3 +208,7 @@ class TestPcalc(TestCase):
         self.assertEqual(a[1, 0].observe(), 0)
 
         a = zeros((2, 1), dtype="int32")
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

@@ -1,2 +1,2 @@
 # Tests
- pushd pcalc/tests/; python -m unittest test_pcalc; popd
+ python -m unittest tests.test_pcalc
