@@ -1,6 +1,7 @@
 from unittest import TestCase
 from pcalc import *
 
+
 class TestPcalc(TestCase):
     def test_initalize_uint16(self):
         x = Value()
@@ -9,18 +10,16 @@ class TestPcalc(TestCase):
         assert(sum(x.value_map.values()) - 1.0 < 0.0000000001)
         try:
             x = Value(65536)
-            assert(False)
-        except:
+        except AssertionError:
             pass
-        
+
         x = Value(0, bit=32, unsigned=False)
         self.assertEqual(x.min, -2147483647)
         self.assertEqual(x.max, 2147483647)
         assert(sum(x.value_map.values()) - 1.0 < 0.0000000001)
         try:
             x = Value(2147483648, bit=32, unsigned=False)
-            assert(False)
-        except:
+        except AssertionError:
             pass
 
     def test_operator_uint16(self):
@@ -110,7 +109,7 @@ class TestPcalc(TestCase):
         self.assertEqual(c.observe(), (257 | 123))
         c = a ^ b
         self.assertEqual(c.observe(), (257 ^ 123))
-        
+
         TRUE = 1
         FALSE = 0
         c = (a < b)
@@ -189,7 +188,7 @@ class TestPcalc(TestCase):
 
         a = Array((2, 3), data=[1, 2, 3, 4, 5, 6], dtype="int32")
         self.assertEqual(a.dtype, "int32")
-        
+
         try:
             a[0, 3]
             assert(False)
@@ -203,11 +202,12 @@ class TestPcalc(TestCase):
             pass
 
     def test_zeros(self):
-        a = zeros((2,1))
+        a = zeros((2, 1))
         self.assertEqual(a[0, 0].observe(), 0)
         self.assertEqual(a[1, 0].observe(), 0)
 
         a = zeros((2, 1), dtype="int32")
+
 
 if __name__ == '__main__':
     import unittest

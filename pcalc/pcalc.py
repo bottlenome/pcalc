@@ -2,6 +2,7 @@ import random
 import math
 from operator import *
 
+
 class Value():
     def create_uniform_possibility(self):
         mp = {}
@@ -24,7 +25,7 @@ class Value():
             self.value_map = self.create_uniform_possibility()
         else:
             if self.min <= value and value <= self.max:
-                self.value_map = {value:1.0}
+                self.value_map = {value: 1.0}
             else:
                 print("input value " + str(value))
                 print("does not contain in range")
@@ -76,7 +77,7 @@ class Value():
         for b in B.value_map:
             for a in A.value_map:
                 value = self.cut(f(a, b))
-                if not mp.has_key(value):
+                if value not in mp:
                     mp[value] = 0.0
                 mp[value] += A.value_map[a] * B.value_map[b]
         C.value_map = mp
@@ -114,7 +115,7 @@ class Value():
         C = Value(0)
         FALSE = 0
         TRUE = 1
-        mp = {FALSE:0.0, TRUE:0.0}
+        mp = {FALSE: 0.0, TRUE: 0.0}
         for b in B.value_map:
             for a in A.value_map:
                 if op(a, b):
@@ -150,7 +151,7 @@ class Value():
 
     def __floordiv__(self, other):
         raise NotImplementedError()
-    
+
     def __index__(self):
         raise NotImplementedError()
 
@@ -228,9 +229,10 @@ class Value():
 
     def __itruediv__(self, other):
         raise NotImplementedError()
-        
+
     def __ixor__(self, other):
         return self.__xor__(other)
+
 
 class Array():
     def getBitUnsigned(self, dtype):
@@ -253,7 +255,8 @@ class Array():
             size *= x
         self.size = size
         if data is None:
-            self.datas = [Value(bit=bit, unsigned=unsigned) for _ in range(size)]
+            self.datas = [Value(bit=bit,
+                                unsigned=unsigned) for _ in range(size)]
         else:
             assert(len(data) == size)
             self.datas = [Value(v, bit=bit, unsigned=unsigned) for v in data]
@@ -308,11 +311,17 @@ class Array():
         return ret
 
     def op(self, f, A, B):
+        def add(x, y):
+            return A[y, x] + B[y, x]
+
+        def sub(x, y):
+            return A[y, x] - B[y, x]
+
         C = zeros(B.shape)
         if f == "add":
-            f = lambda x, y: A[y, x] + B[y, x]
+            f = add
         elif f == "sub":
-            f = lambda x, y: A[y, x] - B[y, x]
+            f = sub
         else:
             raise NotImplementedError
 
@@ -332,22 +341,24 @@ class Array():
         for i in range(1, self.size):
             x += self[i]
         return x
-    
+
 
 def array(data, dtype="uint16"):
-    l = []
+    list_datas = []
     shape = (len(data), len(data[0]))
     for y in range(len(data)):
         assert(len(data[y]) == shape[1])
         for x in range(len(data[y])):
-            l.append(data[y][x])
-    return Array(shape, data=l, dtype=dtype)
+            list_datas.append(data[y][x])
+    return Array(shape, data=list_datas, dtype=dtype)
+
 
 def zeros(shape, dtype="uint16"):
     size = 1
     for x in shape:
         size *= x
     return Array(shape, data=[0 for v in range(size)], dtype=dtype)
+
 
 def randarray(shape, dtype="uint16"):
     if type(shape) == int:
@@ -361,7 +372,10 @@ def randarray(shape, dtype="uint16"):
         int_min = 0
         int_max = 2 ** 16
 
-    return Array(shape, data=[random.randint(int_min, int_max) for _ in range(size)], dtype=dtype)
+    return Array(shape,
+                 data=[random.randint(int_min, int_max) for _ in range(size)],
+                 dtype=dtype)
+
 
 if __name__ == "__main__":
     x = Value()
