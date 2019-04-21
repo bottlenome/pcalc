@@ -204,7 +204,8 @@ class TestPcalc(TestCase):
         b = randarray(6)
         try:
             a - b
-        except: ValueError
+        except ValueError:
+            pass
 
         c = a + a
         self.assertEqual(c[0, 0].observe(), 2)
@@ -222,13 +223,47 @@ class TestPcalc(TestCase):
         self.assertEqual(c[1, 1].observe(), 0)
         self.assertEqual(c[1, 2].observe(), 0)
 
-
     def test_zeros(self):
         a = zeros((2, 1))
         self.assertEqual(a[0, 0].observe(), 0)
         self.assertEqual(a[1, 0].observe(), 0)
 
         a = zeros((2, 1), dtype="int32")
+
+    def test_array_operator_uint16(self):
+        a = pcalc.Value(1)
+        x = pcalc.array([[1, 2, 3], [4, 5, 6]])
+
+        # add
+        c = a + x
+        self.assertEqual(c.shape, (2, 3))
+        self.assertEqual(c[0, 0].observe(), 2)
+        self.assertEqual(c[0, 1].observe(), 3)
+        self.assertEqual(c[0, 2].observe(), 4)
+        self.assertEqual(c[1, 0].observe(), 5)
+        self.assertEqual(c[1, 1].observe(), 6)
+        self.assertEqual(c[1, 2].observe(), 7)
+
+        # sub
+        c = a - x
+        self.assertEqual(c.shape, (2, 3))
+        self.assertEqual(c[0, 0].observe(), 0)
+        self.assertEqual(c[0, 1].observe(), 65535)
+        self.assertEqual(c[0, 2].observe(), 65534)
+        self.assertEqual(c[1, 0].observe(), 65533)
+        self.assertEqual(c[1, 1].observe(), 65532)
+        self.assertEqual(c[1, 2].observe(), 65531)
+
+        # pow
+        c = x ** 2
+        self.assertEqual(c.shape, (2, 3))
+        self.assertEqual(c[0, 0].observe(), 1)
+        self.assertEqual(c[0, 1].observe(), 4)
+        self.assertEqual(c[0, 2].observe(), 9)
+        self.assertEqual(c[1, 0].observe(), 16)
+        self.assertEqual(c[1, 1].observe(), 25)
+        self.assertEqual(c[1, 2].observe(), 36)
+
 
 if __name__ == '__main__':
     import unittest
