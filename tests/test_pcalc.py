@@ -215,7 +215,7 @@ class TestPcalc(TestCase):
         self.assertEqual(c[1, 1].observe(), 10)
         self.assertEqual(c[1, 2].observe(), 12)
 
-        c = b - a
+        c = a - a
         self.assertEqual(c[0, 0].observe(), 0)
         self.assertEqual(c[0, 1].observe(), 0)
         self.assertEqual(c[0, 2].observe(), 0)
