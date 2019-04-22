@@ -319,8 +319,14 @@ class Array():
 
         C = zeros(B.shape)
         if f == "add":
+            if A.shape != B.shape:
+                raise ValueError("A.shape:" + str(A.shape) + " B.shape:" + str(B.shape) +
+                        " must be same")
             f = add
         elif f == "sub":
+            if A.shape != B.shape:
+                raise ValueError("A.shape:" + str(A.shape) + " B.shape:" + str(B.shape) +
+                        " must be same")
             f = sub
         else:
             raise NotImplementedError

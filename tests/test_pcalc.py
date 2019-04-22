@@ -201,13 +201,17 @@ class TestPcalc(TestCase):
         except IndexError:
             pass
 
+        b = randarray(6)
+        try:
+            a - b
+        except: ValueError
+
     def test_zeros(self):
         a = zeros((2, 1))
         self.assertEqual(a[0, 0].observe(), 0)
         self.assertEqual(a[1, 0].observe(), 0)
 
         a = zeros((2, 1), dtype="int32")
-
 
 if __name__ == '__main__':
     import unittest
