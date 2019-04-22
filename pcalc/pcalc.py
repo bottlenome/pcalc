@@ -311,36 +311,28 @@ class Array():
         return ret
 
     def op(self, f, A, B):
-        def add(x, y):
-            return A[y, x] + B[y, x]
-
-        def sub(x, y):
-            return A[y, x] - B[y, x]
-
         C = zeros(B.shape)
-        if f == "add":
-            if A.shape != B.shape:
-                raise ValueError("A.shape:" + str(A.shape) + " B.shape:" + str(B.shape) +
-                        " must be same")
-            f = add
-        elif f == "sub":
-            if A.shape != B.shape:
-                raise ValueError("A.shape:" + str(A.shape) + " B.shape:" + str(B.shape) +
-                        " must be same")
-            f = sub
-        else:
-            raise NotImplementedError
-
         for y in range(C.shape[0]):
             for x in range(C.shape[1]):
                 C[y, x] = f(x, y)
         return C
 
+    def check_shape(self, A, B):
+        if A.shape != B.shape:
+            raise ValueError("A.shape:" + str(A.shape) + " B.shape:" + str(B.shape) +
+                    " must be same")
+
     def __add__(self, other):
-        return self.op("add", self, other)
+        self.check_shape(self, other)
+        def add(x, y):
+            return self[y, x] + other[y, x]
+        return self.op(add, self, other)
 
     def __sub__(self, other):
-        return self.op("sub", self, other)
+        self.check_shape(self, other)
+        def sub(x, y):
+            return self[y, x] - other[y, x]
+        return self.op(sub, self, other)
 
     def sum(self):
         x = self[0]

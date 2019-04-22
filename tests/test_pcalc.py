@@ -206,6 +206,23 @@ class TestPcalc(TestCase):
             a - b
         except: ValueError
 
+        c = a + a
+        self.assertEqual(c[0, 0].observe(), 2)
+        self.assertEqual(c[0, 1].observe(), 4)
+        self.assertEqual(c[0, 2].observe(), 6)
+        self.assertEqual(c[1, 0].observe(), 8)
+        self.assertEqual(c[1, 1].observe(), 10)
+        self.assertEqual(c[1, 2].observe(), 12)
+
+        c = b - a
+        self.assertEqual(c[0, 0].observe(), 0)
+        self.assertEqual(c[0, 1].observe(), 0)
+        self.assertEqual(c[0, 2].observe(), 0)
+        self.assertEqual(c[1, 0].observe(), 0)
+        self.assertEqual(c[1, 1].observe(), 0)
+        self.assertEqual(c[1, 2].observe(), 0)
+
+
     def test_zeros(self):
         a = zeros((2, 1))
         self.assertEqual(a[0, 0].observe(), 0)
